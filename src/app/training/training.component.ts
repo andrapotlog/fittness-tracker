@@ -1,7 +1,6 @@
 import {Component, OnDestroy, OnInit} from '@angular/core';
 import {TrainingService} from "./training.service";
 import {Subscription} from "rxjs";
-import {Exercise} from "./exercise.module";
 
 @Component({
   selector: 'app-training',
