@@ -7,9 +7,10 @@ import {Injectable} from "@angular/core";
 export class TrainingService {
   private availableExercises: Exercise[] = [];
   private runningExercise: Exercise;
+
   exerciseChange = new Subject<Exercise>();
   exercisesChange = new Subject<Exercise[]>();
-  private exercises: Exercise[] = [];
+  pastExercisesChanged = new Subject<Exercise[]>();
 
   constructor(private db: AngularFirestore) {
   }
@@ -32,6 +33,8 @@ export class TrainingService {
   }
 
   startExercise(selectedId: string) {
+    /*this.db.doc('availableExercises/' + selectedId)
+      .update({lastSelected: new Date});*/
     // @ts-ignore
     this.runningExercise = this.availableExercises.find(ex => ex.id == selectedId);
     this.exerciseChange.next({...this.runningExercise});
@@ -39,7 +42,7 @@ export class TrainingService {
   }
 
   completeExercise() {
-    this.exercises.push({
+    this.addDatatoDatabase({
       ...this.runningExercise,
       date: new Date(),
       state: 'completed'
@@ -49,7 +52,7 @@ export class TrainingService {
   }
 
   cancelExercise(progress: number) {
-    this.exercises.push({
+    this.addDatatoDatabase({
       ...this.runningExercise,
       duration: this.runningExercise.duration * (progress / 100),
       calories: this.runningExercise.calories * (progress / 100),
@@ -64,7 +67,16 @@ export class TrainingService {
     return {...this.runningExercise}
   }
 
-  getPasExercises() {
-    return this.exercises.slice();
+  fetchPasExercises() {
+    this.db.collection('finishedExercises')
+      .valueChanges()
+      // @ts-ignore
+      .subscribe((exercises: Exercise[]) => {
+        this.pastExercisesChanged.next(exercises);
+      });
+  }
+
+  addDatatoDatabase(exercise: Exercise) {
+    this.db.collection('finishedExercises').add(exercise);
   }
 }
