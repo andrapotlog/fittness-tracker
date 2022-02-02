@@ -1,11 +1,11 @@
 <section class="signup-form">
     <form fxLayout="column" fxLayoutAlign="center center" fxLayoutGap="10px" #f="ngForm" (ngSubmit)="onSubmit(f)">
         <mat-form-field>
-            <input 
-            type="email" 
-            matInput 
-            placeholder="Your Email" 
-            ngModel 
+            <input
+            type="email"
+            matInput
+            placeholder="Your Email"
+            ngModel
             name="email"
             email
             required
@@ -14,11 +14,11 @@
             <mat-error *ngIf="!emailInput.hasError('required')">Email is invalid</mat-error>
         </mat-form-field>
         <mat-form-field hintLabel="Should be at leat 6 characters long">
-            <input 
-            type="password" 
-            matInput 
-            placeholder="Your Password" 
-            ngModel 
+            <input
+            type="password"
+            matInput
+            placeholder="Your Password"
+            ngModel
             name="password"
             required
             minlength="6"
@@ -27,29 +27,30 @@
             <mat-error *ngIf="pwInput.value?.length < 6">Has to be at least 6 characters long</mat-error>
         </mat-form-field>
         <mat-form-field>
-            <input 
-            matInput 
-            placeholder="Choose your birthdate" 
+            <input
+            matInput
+            placeholder="Choose your birthdate"
             [matDatepicker]="picker"
             [max]="maxDate"
             ngModel
             name="nirthday"
             required
             >
-            <mat-datepicker-toggle 
-            matSuffix 
+            <mat-datepicker-toggle
+            matSuffix
             [for]="picker"></mat-datepicker-toggle
             >
             <mat-datepicker #picker>
             </mat-datepicker>
         </mat-form-field>
-        <mat-checkbox 
+        <mat-checkbox
         labelPosition="before"
         ngModel
         name="agree"
         required
         color="primary"
         >Agree to Terms and Conditions</mat-checkbox>
-        <button type="submit" mat-raised-button color="primary" [disabled]="f.invalid">Submit</button>
+        <button *ngIf="!isLoading" type="submit" mat-raised-button color="primary" [disabled]="f.invalid">Submit</button>
+        <mat-spinner *ngIf="isLoading"></mat-spinner>
     </form>
 </section>
