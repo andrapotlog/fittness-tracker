@@ -19,7 +19,7 @@
             name="password">
             <mat-error *ngIf="form.get('password')?.hasError('required')">Fields must not be empty</mat-error>
         </mat-form-field>
-        <button *ngIf="!isLoading" type="submit" mat-raised-button color="primary" [disabled]="form.invalid">Submit</button>
-      <mat-spinner *ngIf="isLoading"></mat-spinner>
+        <button *ngIf="!(isLoading$ | async)" type="submit" mat-raised-button color="primary" [disabled]="form.invalid">Submit</button>
+      <mat-spinner *ngIf="(isLoading$ | async)"></mat-spinner>
        </form>
 </section>
