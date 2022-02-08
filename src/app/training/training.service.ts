@@ -1,27 +1,23 @@
 import {Exercise} from "./exercise.module";
-import {Subject, Subscription} from "rxjs";
+import {Subscription} from "rxjs";
 import {AngularFirestore} from "@angular/fire/compat/firestore";
 import {Injectable} from "@angular/core";
 import {UIService} from "../shared/ui.service";
 
 import * as UI from '../shared/ui.actions';
-import * as fromRoot from '../app.reducer';
+import * as Training from './training.actions';
+import * as fromTraining from './training.reducer';
 import {Store} from "@ngrx/store";
+
+import {take} from 'rxjs/operators';
 
 @Injectable()
 export class TrainingService {
-  private availableExercises: Exercise[] = [];
-  private runningExercise: Exercise;
-
-  exerciseChange = new Subject<Exercise>();
-  exercisesChange = new Subject<Exercise[] | null>();
-  pastExercisesChanged = new Subject<Exercise[]>();
-
   fbSubs: Subscription[] = [];
 
   constructor(private db: AngularFirestore,
               private uiService: UIService,
-              private store: Store<fromRoot.State>) {
+              private store: Store<fromTraining.State>) {
   }
 
   fetchAvailableExercises() {
@@ -30,7 +26,6 @@ export class TrainingService {
       .collection('availableExercises')
       .snapshotChanges()
       .map(docArray => {
-        //throw(new Error());
       return docArray.map(doc => {
         const data = doc.payload.doc.data() as Exercise;
         return {
@@ -42,48 +37,41 @@ export class TrainingService {
     })
       .subscribe((exercises: Exercise[]) => {
         this.store.dispatch(new UI.StopLoading());
-        this.availableExercises = exercises;
-        this.exercisesChange.next([...this.availableExercises]);
+        this.store.dispatch(new Training.SetAvailableTraining(exercises));
     }, error => {
         this.store.dispatch(new UI.StopLoading());
         this.uiService.showSnackbar('Fetiching exercises failed, please try again later!', null, 3000);
-        this.exercisesChange.next(null);
       }));
   }
 
   startExercise(selectedId: string) {
-    /*this.db.doc('availableExercises/' + selectedId)
-      .update({lastSelected: new Date});*/
-    // @ts-ignore
-    this.runningExercise = this.availableExercises.find(ex => ex.id == selectedId);
-    this.exerciseChange.next({...this.runningExercise});
-    //console.log(selectedId);
+    this.store.dispatch(new Training.StartTraining(selectedId));
   }
 
   completeExercise() {
-    this.addDatatoDatabase({
-      ...this.runningExercise,
-      date: new Date(),
-      state: 'completed'
+    this.store.select(fromTraining.getActiveTraining).pipe(take(1))
+      .subscribe(exercise => {
+        this.addDatatoDatabase({
+          ...exercise,
+          date: new Date(),
+          state: 'completed'
+        });
+        this.store.dispatch(new Training.StopTraining());
     });
-    this.runningExercise = {} as Exercise;
-    this.exerciseChange.next({} as Exercise);
   }
 
   cancelExercise(progress: number) {
-    this.addDatatoDatabase({
-      ...this.runningExercise,
-      duration: this.runningExercise.duration * (progress / 100),
-      calories: this.runningExercise.calories * (progress / 100),
-      date: new Date(),
-      state: 'cancelled'
-    });
-    this.runningExercise = {} as Exercise;
-    this.exerciseChange.next({} as Exercise);
-  }
-
-  getRunningExercise() {
-    return {...this.runningExercise}
+    this.store.select(fromTraining.getActiveTraining).pipe(take(1))
+      .subscribe(exercise => {
+        this.addDatatoDatabase({
+          ...exercise,
+          duration: exercise.duration * (progress / 100),
+          calories: exercise.calories * (progress / 100),
+          date: new Date(),
+          state: 'cancelled'
+        });
+        this.store.dispatch(new Training.StopTraining());
+      });
   }
 
   fetchPasExercises() {
@@ -91,7 +79,7 @@ export class TrainingService {
       .valueChanges()
       // @ts-ignore
       .subscribe((exercises: Exercise[]) => {
-        this.pastExercisesChanged.next(exercises);
+        this.store.dispatch(new Training.SetFinishedTraining(exercises));
       }));
   }
 

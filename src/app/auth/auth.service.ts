@@ -46,7 +46,6 @@ export class AuthService {
   }
 
   login(authData: AuthData) {
-    //this.uiService.loadingStateChanged.next(true);
     this.store.dispatch(new UI.StartLoading());
     this.auth.signInWithEmailAndPassword(authData.email, authData.password)
       .then(result => {

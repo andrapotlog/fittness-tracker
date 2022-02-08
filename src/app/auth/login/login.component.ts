@@ -4,7 +4,6 @@ import {AuthService} from "../auth.service";
 import {UIService} from "../../shared/ui.service";
 import {Observable} from "rxjs";
 import {Store} from "@ngrx/store";
-import 'rxjs-compat/add/operator/map'
 
 import * as fromRoot from '../../app.reducer';
 
